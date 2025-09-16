@@ -1,121 +1,91 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Eliza ↔ Assistant Chat Demo</title>
-  <style>
-    body{font-family:Arial,sans-serif;margin:0;padding:0;background:#0f172a;color:#e6eef8}
-    header{padding:20px;background:#112236;text-align:center}
-    .container{max-width:900px;margin:24px auto;padding:16px}
-    .panel{background:#061124;border-radius:12px;padding:14px;box-shadow:0 6px 18px rgba(2,6,23,.6)}
-    .controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
-    input,select,button{padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,.06);background:#081426;color:inherit}
-    button{cursor:pointer}
-    #log{height:420px;overflow:auto;padding:12px;background:linear-gradient(180deg,#041025,#071726);border-radius:8px;border:1px solid rgba(255,255,255,.02)}
-    .msg{margin:8px 0;padding:10px;border-radius:10px;max-width:85%}
-    .from-assistant{background:linear-gradient(90deg,#2a60ff22,#2a60ff11);align-self:flex-end}
-    .from-eliza{background:linear-gradient(90deg,#28a74522,#28a74511)}
-    .meta{font-size:12px;opacity:.7;margin-bottom:6px}
-    footer{margin-top:12px;font-size:13px;opacity:.85}
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Eliza ↔ Assistant Demo</title>
+<style>
+body{font-family:Arial,sans-serif;background:#0f172a;color:#e6eef8;margin:0;padding:0;}
+header{padding:20px;text-align:center;background:#112236;}
+.container{max-width:800px;margin:20px auto;padding:10px;}
+.panel{background:#061124;border-radius:10px;padding:12px;}
+#log{height:400px;overflow:auto;border:1px solid #333;padding:10px;border-radius:8px;background:#041025;}
+.msg{margin:8px 0;padding:8px;border-radius:8px;}
+.from-assistant{background:#2a60ff22;}
+.from-eliza{background:#28a74522;}
+button{margin:4px;padding:6px 12px;border-radius:6px;border:none;background:#112236;color:white;cursor:pointer;}
+</style>
 </head>
 <body>
-  <header>
-    <h1>Eliza ↔ Assistant Chat Demo</h1>
-    <p>Automated conversation between a local assistant and Eliza chatbot.</p>
-  </header>
-  <main class="container">
-    <div class="panel">
-      <div class="controls">
-        <button id="startBtn">Start</button>
-        <button id="pauseBtn">Pause</button>
-        <button id="stepBtn">Step</button>
-        <button id="clearBtn">Clear</button>
-        <label>Delay(ms)<input id="delay" type="number" value="1200" /></label>
-      </div>
-      <div id="log"></div>
-      <footer>Use this page to run a continuous conversation demo.</footer>
-    </div>
-  </main>
-  <script>
-    // Simple Eliza chatbot
-    const eliza = (function(){
-      const reflections = {"am":"are","i":"you","my":"your","you":"me","me":"you"};
-      function reflect(fragment){
-        return fragment.split(/\s+/).map(w=>reflections[w.toLowerCase()]||w).join(' ');
-      }
-      const rules = [
-        {pattern:/I need (.*)/i, reply:["Why do you need %1?","Would it help you to get %1?"]},
-        {pattern:/I can't (.*)/i, reply:["How do you know you can't %1?","Perhaps you could %1 if you tried."]},
-        {pattern:/(.*)/i, reply:["Tell me more about that.","Why do you say that %1?"]}
-      ];
-      return function(input){
-        input=input.trim();
-        for(const r of rules){
-          const m=input.match(r.pattern);
-          if(m){
-            return r.reply[Math.floor(Math.random()*r.reply.length)].replace(/%1/g,reflect(m[1]||""));
-          }
-        }
-        return "I don't fully understand.";
-      }
-    })();
+<header>
+<h1>Eliza ↔ Assistant Demo</h1>
+</header>
+<div class="container">
+<div class="panel">
+<div id="log"></div>
+<button id="startBtn">Start Conversation</button>
+<button id="pauseBtn">Pause</button>
+<button id="clearBtn">Clear</button>
+</div>
+</div>
+<script>
+// Simple Eliza
+function eliza(input){
+    input=input.toLowerCase();
+    if(input.includes("hello")) return "Hello! How are you feeling today?";
+    if(input.includes("i need")) return "Why do you need that?";
+    if(input.includes("i am")) return "How long have you felt that way?";
+    return "Tell me more about that.";
+}
 
-    const logEl = document.getElementById('log');
-    const startBtn = document.getElementById('startBtn');
-    const pauseBtn = document.getElementById('pauseBtn');
-    const stepBtn = document.getElementById('stepBtn');
-    const clearBtn = document.getElementById('clearBtn');
-    const delayInput = document.getElementById('delay');
-    let running=false;
-    let convo=[];
+// Simple Assistant
+function assistant(lastEliza){
+    const options = [
+        "That's interesting, can you expand on that?",
+        `You said: "${lastEliza}", tell me more.`,
+        "How does that make you feel?",
+        "Why do you say that?"
+    ];
+    return options[Math.floor(Math.random()*options.length)];
+}
 
-    function appendMessage(speaker,text){
-      convo.push({speaker,text});
-      const d=document.createElement('div');
-      d.className='msg '+(speaker==='assistant'?'from-assistant':'from-eliza');
-      const meta=document.createElement('div');meta.className='meta';meta.textContent=speaker.toUpperCase();
-      const t=document.createElement('div');t.textContent=text;
-      d.appendChild(meta);d.appendChild(t);logEl.appendChild(d);
-      logEl.scrollTop=logEl.scrollHeight;
+// UI and loop
+const log=document.getElementById("log");
+let running=false;
+let convo=[];
+
+function appendMsg(speaker,text){
+    convo.push({speaker,text});
+    const d=document.createElement("div");
+    d.className="msg "+(speaker==="assistant"?"from-assistant":"from-eliza");
+    d.textContent=speaker.toUpperCase()+": "+text;
+    log.appendChild(d);
+    log.scrollTop=log.scrollHeight;
+}
+
+async function runTurn(){
+    let lastEliza=convo.length?convo[convo.length-1].speaker==="eliza"?convo[convo.length-1].text:"Hello":"Hello";
+    let aText=assistant(lastEliza);
+    appendMsg("assistant",aText);
+    await new Promise(r=>setTimeout(r,800));
+    let eText=eliza(aText);
+    appendMsg("eliza",eText);
+}
+
+async function runLoop(){
+    if(running) return;
+    running=true;
+    while(running){
+        await runTurn();
+        await new Promise(r=>setTimeout(r,1200));
     }
+}
 
-    function localAssistantReply(){
-      const last=(convo.length?convo[convo.length-1].text:'hello');
-      const templates=[
-        `Interesting: '${last}'\`,
-        `Why do you mention '${last}'?`
-      ];
-      return templates[Math.floor(Math.random()*templates.length)];
-    }
-
-    async function singleTurn(){
-      const assistantText=localAssistantReply();
-      appendMessage('assistant',assistantText);
-      await new Promise(r=>setTimeout(r,200));
-      const elText=eliza(assistantText);
-      appendMessage('eliza',elText);
-    }
-
-    async function runLoop(){
-      if(running)return;
-      running=true;startBtn.disabled=true;pauseBtn.disabled=false;
-      while(running){
-        await singleTurn();
-        const delay=Math.max(200,parseInt(delayInput.value)||1200);
-        await new Promise(r=>setTimeout(r,delay));
-      }
-    }
-
-    startBtn.addEventListener('click',()=>runLoop());
-    pauseBtn.addEventListener('click',()=>{running=false;startBtn.disabled=false;pauseBtn.disabled=true;});
-    stepBtn.addEventListener('click',()=>singleTurn());
-    clearBtn.addEventListener('click',()=>{convo=[];logEl.innerHTML='';});
-
-    pauseBtn.disabled=true;
-    appendMessage('assistant','Hello — ready to start?');
-    appendMessage('eliza',eliza('Hello'));
-  </script>
+document.getElementById("startBtn").addEventListener("click",runLoop);
+document.getElementById("pauseBtn").addEventListener("click",()=>{running=false;});
+document.getElementById("clearBtn").addEventListener("click",()=>{convo=[];log.innerHTML="";});
+appendMsg("assistant","Hello — ready to start?");
+appendMsg("eliza","Hello! How are you feeling today?");
+</script>
 </body>
 </html>
