@@ -19,6 +19,7 @@ button{margin:4px;padding:6px 12px;border-radius:6px;border:none;background:#112
 <body>
 <header>
 <h1>Eliza ↔ Assistant Demo</h1>
+<p>Click Start to see the conversation run automatically.</p>
 </header>
 <div class="container">
 <div class="panel">
@@ -29,7 +30,7 @@ button{margin:4px;padding:6px 12px;border-radius:6px;border:none;background:#112
 </div>
 </div>
 <script>
-// Simple Eliza
+// Simple Eliza chatbot
 function eliza(input){
     input=input.toLowerCase();
     if(input.includes("hello")) return "Hello! How are you feeling today?";
@@ -84,6 +85,8 @@ async function runLoop(){
 document.getElementById("startBtn").addEventListener("click",runLoop);
 document.getElementById("pauseBtn").addEventListener("click",()=>{running=false;});
 document.getElementById("clearBtn").addEventListener("click",()=>{convo=[];log.innerHTML="";});
+
+// Starter messages
 appendMsg("assistant","Hello — ready to start?");
 appendMsg("eliza","Hello! How are you feeling today?");
 </script>
